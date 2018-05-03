@@ -12,7 +12,7 @@ class ToDoListViewController: UITableViewController {
 
     var itemArray = [Item]()
     
-    let defaults = UserDefaults.standard
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,10 +21,11 @@ class ToDoListViewController: UITableViewController {
         newItem.title = "Buy a cat"
         itemArray.append(newItem)
         
-        if let items = defaults.object(forKey: "ToDoListArray") as? [Item] {
-            itemArray = items
-            
-        }
+        
+//        if let items = defaults.object(forKey: "ToDoListArray") as? [Item] {
+//            itemArray = items
+//        }
+        
     }
     
         
@@ -68,9 +69,9 @@ class ToDoListViewController: UITableViewController {
         
         itemArray[indexPath.row].isDone = !itemArray[indexPath.row].isDone
         
-        tableView.deselectRow(at: indexPath, animated: true)
-        tableView.reloadData()
+        updateData()
         
+        tableView.deselectRow(at: indexPath, animated: true)
         
     }
     
@@ -107,9 +108,9 @@ class ToDoListViewController: UITableViewController {
             print(newItem.title)
             
             self.itemArray.append(newItem)
-            self.tableView.reloadData()
-//            self.defaults.set(self.itemArray, forKey: "ToDoListArray")
             
+            self.updateData()
+       
         }
         
         alert.addAction(action)
@@ -118,6 +119,19 @@ class ToDoListViewController: UITableViewController {
             
         }
     
+    
+    func updateData() {
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding itemArray, \(error)")
+        }
+        
+        tableView.reloadData()
+    }
     
     
 }
