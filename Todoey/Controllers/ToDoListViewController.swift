@@ -17,9 +17,7 @@ class ToDoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let newItem = Item()
-        newItem.title = "Buy a cat"
-        itemArray.append(newItem)
+        loadData()
         
         
 //        if let items = defaults.object(forKey: "ToDoListArray") as? [Item] {
@@ -133,6 +131,18 @@ class ToDoListViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    func loadData() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding itemArray, \(error)")
+            }
+            
+        }
+        
+    }
     
 }
 
