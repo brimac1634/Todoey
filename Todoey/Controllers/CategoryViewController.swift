@@ -11,7 +11,7 @@ import CoreData
 
 class CategoryViewController: UITableViewController {
 
-    var categoriesArray : [Category] = []
+    var categoriesArray = [Category]()
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
@@ -31,8 +31,6 @@ class CategoryViewController: UITableViewController {
         cell.textLabel?.text = categoriesArray[indexPath.row].name
         return cell
     }
-    
-    //MARK: - Data Manipulation Methods
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let alert = UIAlertController(title: "Delete List", message: "Are you sure you want to delete the \"\(self.categoriesArray[indexPath.row].name!)\" list?", preferredStyle: .alert)
@@ -51,6 +49,43 @@ class CategoryViewController: UITableViewController {
             present(alert, animated: true, completion: nil)
         }
     }
+    
+    //MARK: - Tableview Delegate Methods
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "goToItems", sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVC = segue.destination as! ToDoListViewController
+        
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVC.selectedCategory = categoriesArray[indexPath.row]
+        }
+    }
+    
+    //MARK: - Data Manipulation Methods
+    func updateData() {
+        do {
+            try context.save()
+        } catch {
+            print("Error saving data, \(error)")
+        }
+        
+        tableView.reloadData()
+    }
+    
+    func loadData() {
+        let request : NSFetchRequest<Category> = Category.fetchRequest()
+        
+        do {
+            categoriesArray = try context.fetch(request)
+        } catch {
+            print("Error loading data, \(error)")
+        }
+        
+        tableView.reloadData()
+    }
+    
     
     //MARK: - Add New Categories
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -78,29 +113,8 @@ class CategoryViewController: UITableViewController {
     
    
     
-    //MARK: - Tableview Delegate Methods
     
     
-    //MARK: - Functions
-    func updateData() {
-        do {
-            try context.save()
-        } catch {
-            print("Error saving data, \(error)")
-        }
-        
-        tableView.reloadData()
-    }
     
-    func loadData() {
-        let request : NSFetchRequest<Category> = Category.fetchRequest()
-        
-        do {
-            categoriesArray = try context.fetch(request)
-        } catch {
-            print("Error loading data, \(error)")
-        }
-        
-        tableView.reloadData()
-    }
+    
 }
