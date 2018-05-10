@@ -98,13 +98,17 @@ class CategoryViewController: UITableViewController {
         }
         
         let action = UIAlertAction(title: "Add Category", style: .default) { (action) in
-            let newCategory = Category(context: self.context)
             
-            newCategory.name = textField.text
-            self.categoriesArray.append(newCategory)
+            if textField.text?.count != 0 {
+                let newCategory = Category(context: self.context)
+                
+                newCategory.name = textField.text
+                self.categoriesArray.append(newCategory)
+                
+                
+                self.updateData()
+            }
             
-            
-            self.updateData()
         }
         
         alert.addAction(action)
