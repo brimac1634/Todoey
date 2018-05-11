@@ -7,46 +7,60 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
 
-    var categoriesArray = [Category]()
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    let realm = try! Realm()
+    
+    var categories: Results<Category>?
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         loadData()
+        
+        
     }
     
     
     //MARK: - Tableview Data Source Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoriesArray.count
+        return categories?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
-        cell.textLabel?.text = categoriesArray[indexPath.row].name
+        cell.textLabel?.text = categories?[indexPath.row].name ?? "No categories added yet."
         return cell
     }
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            let alert = UIAlertController(title: "Delete List", message: "Are you sure you want to delete the \"\(self.categoriesArray[indexPath.row].name!)\" list?", preferredStyle: .alert)
-            
-            let deleteAction = UIAlertAction(title: "Delete", style: .default) { (action) in
-                self.context.delete(self.categoriesArray[indexPath.row])
-                self.categoriesArray.remove(at: indexPath.row)
-                self.updateData()
+            if let category = self.categories?[indexPath.row] {
+                let alert = UIAlertController(title: "Delete List", message: "Are you sure you want to delete the \"\(self.categories![indexPath.row].name)\" list?", preferredStyle: .alert)
+                
+                let deleteAction = UIAlertAction(title: "Delete", style: .default) { (action) in
+                    
+                    do {
+                        try self.realm.write {
+                            self.realm.delete(category)
+                        }
+                    } catch {
+                        print("Error deleting category, \(error)")
+                    }
+                    
+                    tableView.reloadData()
+                }
+                
+                let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (action) in
+                }
+                
+                alert.addAction(deleteAction)
+                alert.addAction(cancelAction)
+                present(alert, animated: true, completion: nil)
             }
             
-            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (action) in
-            }
-            
-            alert.addAction(deleteAction)
-            alert.addAction(cancelAction)
-            present(alert, animated: true, completion: nil)
         }
     }
     
@@ -59,14 +73,16 @@ class CategoryViewController: UITableViewController {
         let destinationVC = segue.destination as! ToDoListViewController
         
         if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categoriesArray[indexPath.row]
+            destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
     
     //MARK: - Data Manipulation Methods
-    func updateData() {
+    func save(category: Category) {
         do {
-            try context.save()
+            try realm.write {
+                realm.add(category)
+            }
         } catch {
             print("Error saving data, \(error)")
         }
@@ -75,13 +91,8 @@ class CategoryViewController: UITableViewController {
     }
     
     func loadData() {
-        let request : NSFetchRequest<Category> = Category.fetchRequest()
         
-        do {
-            categoriesArray = try context.fetch(request)
-        } catch {
-            print("Error loading data, \(error)")
-        }
+        categories = realm.objects(Category.self)
         
         tableView.reloadData()
     }
@@ -100,13 +111,11 @@ class CategoryViewController: UITableViewController {
         let action = UIAlertAction(title: "Add Category", style: .default) { (action) in
             
             if textField.text?.count != 0 {
-                let newCategory = Category(context: self.context)
+                let newCategory = Category()
                 
-                newCategory.name = textField.text
-                self.categoriesArray.append(newCategory)
+                newCategory.name = textField.text!
                 
-                
-                self.updateData()
+                self.save(category: newCategory)
             }
             
         }
