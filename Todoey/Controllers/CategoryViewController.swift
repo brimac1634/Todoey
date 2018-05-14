@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
 
     let realm = try! Realm()
     
@@ -21,7 +21,7 @@ class CategoryViewController: UITableViewController {
 
         loadData()
         
-        
+        tableView.rowHeight = 80.0
     }
     
     
@@ -31,42 +31,19 @@ class CategoryViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+      
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+        
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No categories added yet."
+        
         return cell
     }
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            if let category = self.categories?[indexPath.row] {
-                let alert = UIAlertController(title: "Delete List", message: "Are you sure you want to delete the \"\(self.categories![indexPath.row].name)\" list?", preferredStyle: .alert)
-                
-                let deleteAction = UIAlertAction(title: "Delete", style: .default) { (action) in
-                    
-                    do {
-                        try self.realm.write {
-                            self.realm.delete(category)
-                        }
-                    } catch {
-                        print("Error deleting category, \(error)")
-                    }
-                    
-                    tableView.reloadData()
-                }
-                
-                let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (action) in
-                }
-                
-                alert.addAction(deleteAction)
-                alert.addAction(cancelAction)
-                present(alert, animated: true, completion: nil)
-            }
-            
-        }
-    }
+
     
     //MARK: - Tableview Delegate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "goToItems", sender: self)
+        
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -74,6 +51,7 @@ class CategoryViewController: UITableViewController {
         
         if let indexPath = tableView.indexPathForSelectedRow {
             destinationVC.selectedCategory = categories?[indexPath.row]
+            
         }
     }
     
@@ -95,6 +73,22 @@ class CategoryViewController: UITableViewController {
         categories = realm.objects(Category.self)
         
         tableView.reloadData()
+    }
+    
+    //MARK: - Delete Data From Swipe
+    override func updateModel(at indexPath: IndexPath) {
+        if let category = self.categories?[indexPath.row] {
+            
+            do {
+                try self.realm.write {
+                    self.realm.delete(category)
+                }
+            } catch {
+                print("Error deleting category, \(error)")
+            }
+            
+        }
+        
     }
     
     
@@ -124,10 +118,6 @@ class CategoryViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-   
-    
-    
-    
-    
-    
 }
+
+

@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class ToDoListViewController: UITableViewController {
+class ToDoListViewController: SwipeTableViewController {
 
     var toDoItems: Results<Item>?
     let realm = try! Realm()
@@ -24,6 +24,7 @@ class ToDoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        tableView.rowHeight = 80.0
     }
     
 
@@ -36,7 +37,8 @@ class ToDoListViewController: UITableViewController {
         }
     
         override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+            
+            let cell = super.tableView(tableView, cellForRowAt: indexPath)
             
             if let item = toDoItems?[indexPath.row] {
                 cell.textLabel?.text = item.title
@@ -48,8 +50,11 @@ class ToDoListViewController: UITableViewController {
                 cell.textLabel?.text = "No items added"
             }
 
+        
             return cell
         }
+    
+
 
 
     //MARK: - Tableview Delegate Methods
@@ -74,23 +79,13 @@ class ToDoListViewController: UITableViewController {
         }
     
     
-        //Slide to delete method
-        override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-            if editingStyle == .delete {
-
-                if let item = toDoItems?[indexPath.row]{
-                    do {
-                        try realm.write {
-                            realm.delete(item)
-                        }
-                    } catch {
-                        print("Error deleting item, \(error)")
-                    }
-                    
-                    tableView.reloadData()
-                }
-            }
-        }
+//        //Slide to delete method
+//        override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+//            if editingStyle == .delete {
+//
+//                }
+//            }
+//        }
     
     
     //MARK: - Add new items
@@ -145,6 +140,19 @@ class ToDoListViewController: UITableViewController {
         toDoItems = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
     
         tableView.reloadData()
+
+    }
+    
+    override func updateModel(at indexPath: IndexPath) {
+        if let item = self.toDoItems?[indexPath.row]{
+            do {
+                try self.realm.write {
+                    self.realm.delete(item)
+                }
+            } catch {
+                print("Error deleting item, \(error)")
+            }
+        }
 
     }
     
