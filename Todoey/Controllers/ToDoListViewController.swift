@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class ToDoListViewController: SwipeTableViewController {
 
@@ -24,7 +25,6 @@ class ToDoListViewController: SwipeTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.rowHeight = 80.0
     }
     
 
@@ -41,10 +41,15 @@ class ToDoListViewController: SwipeTableViewController {
             let cell = super.tableView(tableView, cellForRowAt: indexPath)
             
             if let item = toDoItems?[indexPath.row] {
+                
                 cell.textLabel?.text = item.title
+                
+                if let color = UIColor(hexString: (selectedCategory?.color)!)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(toDoItems!.count)) {
+                    cell.backgroundColor = color
+                }
+
                 // Ternary operator>
                 // value = condition ? valueIfTrue : ValueIfFalse
-                
                 cell.accessoryType = item.isDone ? .checkmark : .none
             } else {
                 cell.textLabel?.text = "No items added"
@@ -77,15 +82,6 @@ class ToDoListViewController: SwipeTableViewController {
             tableView.deselectRow(at: indexPath, animated: true)
             
         }
-    
-    
-//        //Slide to delete method
-//        override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-//            if editingStyle == .delete {
-//
-//                }
-//            }
-//        }
     
     
     //MARK: - Add new items
@@ -137,6 +133,7 @@ class ToDoListViewController: SwipeTableViewController {
     
     func loadData() {
         
+        
         toDoItems = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
     
         tableView.reloadData()
@@ -148,6 +145,7 @@ class ToDoListViewController: SwipeTableViewController {
             do {
                 try self.realm.write {
                     self.realm.delete(item)
+                    
                 }
             } catch {
                 print("Error deleting item, \(error)")

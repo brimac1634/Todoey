@@ -13,7 +13,9 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        tableView.rowHeight = 80.0
+        tableView.separatorStyle = .none
         
     }
     
@@ -40,6 +42,7 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
             
             // customize the action appearance
             deleteAction.image = UIImage(named: "delete-icon")
+        
             
             return [deleteAction]
         }
